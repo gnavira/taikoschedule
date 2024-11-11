@@ -240,7 +240,7 @@ async function runWrapandUnwrap() {
     try {
       let balance = await checkBalance(PRIVATE_KEY);
       await delay(5000);
-      for (let i = 0; i < 15; i++) {
+      for (let i = 0; i < 10; i++) {
         const txMessage = `Transaction Wrap and Unwrap`;
         console.log(txMessage);
         appendLog(txMessage);

@@ -284,9 +284,7 @@ async function runWrapandUnwrap() {
     }
   }
  }
-const job = new CronJob('30 15 * * *', async () => {
-  console.log('Transaksi akan dijalankan setiap 15:30 UTC');
-  await runWrapandUnwrap();
-});
+const job = new CronJob('30 15 * * *', runWrapandUnwrap, null, true, 'UTC'); console.log('Transaksi akan dijalankan setiap 15:30 UTC');
+  
 job.start();
 runWrapandUnwrap();

@@ -4,10 +4,41 @@ import os
 base_dirs = ["notrun", "firstrun"]
 
 # Kode lama yang ingin diganti
-old_code = """${ethers.formatUnits(gasPriceRounded, 'gwei')} gwei`);"""
+old_code = """async function getRoundedGasPrice(provider, defaultGasPrice) {
+  try {
+    let gasPrice = await provider.getGasPrice();
+    let gasPriceRounded = ethers.parseUnits(
+      (Math.ceil(ethers.formatUnits(gasPrice, 'gwei') * 100) / 100).toString(),
+      'gwei'
+    );
+    console.log(`Gas price: ${ethers.formatUnits(gasPriceRounded, 'gwei')} gwei`.green);
+    return gasPriceRounded;
+  } catch (error) {
+    console.log(`Error: ${error.message} . menggunakan default gas price ${ethers.formatUnits(defaultGasPrice, 'gwei')} gwei`);
+    return defaultGasPrice;
+  }
+}"""
 
 # Kode baru yang akan menggantikan kode lama
-new_code = """${ethers.formatUnits(gasPriceRounded, 'gwei')} gwei`.green);"""
+new_code = """async function getRoundedGasPrice(provider, defaultGasPrice) {
+  try {
+    let feeData = await provider.getFeeData();
+    let gasPrice = feeData.gasPrice;
+    
+    if (!gasPrice) throw new Error("Gas price not available");
+
+    let gasPriceRounded = ethers.parseUnits(
+      (Math.ceil(ethers.formatUnits(gasPrice, 'gwei') * 100) / 100).toString(),
+      'gwei'
+    );
+
+    console.log(`Gas price: ${ethers.formatUnits(gasPriceRounded, 'gwei')} gwei`.green);
+    return gasPriceRounded;
+  } catch (error) {
+    console.log(`Error: ${error.message}. Using default gas price ${ethers.formatUnits(defaultGasPrice, 'gwei')} gwei`);
+    return defaultGasPrice;
+  }
+}"""
 
 # Fungsi untuk mencari dan mengganti kode di file
 def replace_code_in_file(file_path, old_code, new_code):

@@ -6,22 +6,6 @@ base_dirs = ["notrun", "firstrun"]
 # Kode lama yang ingin diganti
 old_code = """async function getRoundedGasPrice(provider, defaultGasPrice) {
   try {
-    let gasPrice = await provider.getGasPrice();
-    let gasPriceRounded = ethers.parseUnits(
-      (Math.ceil(ethers.formatUnits(gasPrice, 'gwei') * 100) / 100).toString(),
-      'gwei'
-    );
-    console.log(`Gas price: ${ethers.formatUnits(gasPriceRounded, 'gwei')} gwei`.green);
-    return gasPriceRounded;
-  } catch (error) {
-    console.log(`Error: ${error.message} . menggunakan default gas price ${ethers.formatUnits(defaultGasPrice, 'gwei')} gwei`);
-    return defaultGasPrice;
-  }
-}"""
-
-# Kode baru yang akan menggantikan kode lama
-new_code = """async function getRoundedGasPrice(provider, defaultGasPrice) {
-  try {
     let feeData = await provider.getFeeData();
     let gasPrice = feeData.gasPrice;
     
@@ -39,6 +23,30 @@ new_code = """async function getRoundedGasPrice(provider, defaultGasPrice) {
     return defaultGasPrice;
   }
 }"""
+
+# Kode baru yang akan menggantikan kode lama
+new_code = """async function getRoundedGasPrice(provider, defaultGasPrice) {
+  try {
+    // Mendapatkan data gas fee
+    const feeData = await provider.getFeeData();
+    let gasPrice = feeData.gasPrice;
+    if (!gasPrice) throw new Error("Gas price tidak tersedia");
+    let gasPriceInGwei = parseFloat(ethers.formatUnits(gasPrice, "gwei"));
+    if (gasPriceInGwei < 0.15) {
+      gasPriceInGwei = 0.15;
+    } else {
+      gasPriceInGwei = Math.ceil(gasPriceInGwei * 100) / 100;
+    }
+    const getRoundedGasPrice = ethers.parseUnits(gasPriceInGwei.toString(), "gwei");
+    console.log(`Gas price: ${gasPriceInGwei} gwei`);
+    return getRoundedGasPrice;
+
+  } catch (error) {
+    console.log(`Error mendapatkan gas price: ${error.message}. Menggunakan default gas price ${ethers.formatUnits(defaultGasPrice, "gwei")} gwei`);
+    return defaultGasPrice;
+  }
+}
+"""
 
 # Fungsi untuk mencari dan mengganti kode di file
 def replace_code_in_file(file_path, old_code, new_code):

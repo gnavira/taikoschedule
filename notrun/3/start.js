@@ -91,9 +91,11 @@ async function doWrap(privateKey) {
   const amount = ethers.parseUnits('1.5', 'ether');
   const maxRetries = 3;
   let attempt = 0;
-
+  const address = await wallet.getAddress();
   while (attempt < maxRetries) {
     try {
+	  const nonce = await provider.getTransactionCount(address, "latest");
+	  console.log(`Nonce: ${nonce}`);
       const gasPrice = await getRoundedGasPrice(provider, defaultgasPrice);
       const wrapContract = new ethers.Contract(WETH_CA, ABI, wallet);
       const txWrap = await wrapContract.deposit({ value: amount, gasPrice: gasPrice });
@@ -128,9 +130,11 @@ async function doUnwrap(privateKey) {
   const amount = ethers.parseUnits('1.5', 'ether');
   const maxRetries = 3;
   let attempt = 0;
-
+  const address = await wallet.getAddress();
   while (attempt < maxRetries) {
     try {
+	  const nonce = await provider.getTransactionCount(address, "latest");
+	  console.log(`Nonce: ${nonce}`);
       const gasPrice = await getRoundedGasPrice(provider, defaultgasPrice);
       const unwrapContract = new ethers.Contract(WETH_CA, ABI, wallet);
       const txUnwrap = await unwrapContract.withdraw(amount, { gasPrice: gasPrice });
@@ -167,9 +171,11 @@ async function doSendEther(privateKey) {
   const sendContract = new ethers.Contract(SEND_CA, SEND_ABI, wallet);
   const maxRetries = 3;
   let attempt = 0;
-
+  const address = await wallet.getAddress();
   while (attempt < maxRetries) {
     try {
+	  const nonce = await provider.getTransactionCount(address, "latest");
+	  console.log(`Nonce: ${nonce}`);
       const gasPrice = await getRoundedGasPrice(provider, defaultgasPrice);
       const txSendContract = await sendContract.multicall(recipients, values, { value: ethers.parseUnits('1.5', 'ether'), gasPrice: gasPrice });
       const receipt = await txSendContract.wait(1);

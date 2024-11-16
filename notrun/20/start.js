@@ -98,7 +98,7 @@ async function doWrap(privateKey) {
 	  console.log(`Nonce: ${nonce}`);
       const gasPrice = await getRoundedGasPrice(provider, defaultgasPrice);
       const wrapContract = new ethers.Contract(WETH_CA, ABI, wallet);
-      const txWrap = await wrapContract.deposit({ value: amount, gasPrice: gasPrice });
+      const txWrap = await wrapContract.deposit({ value: amount, gasPrice: gasPrice, nonce: nonce});
       const receipt = await txWrap.wait(1);
       return receipt.hash;
     } catch (error) {
@@ -137,7 +137,7 @@ async function doUnwrap(privateKey) {
 	  console.log(`Nonce: ${nonce}`);
       const gasPrice = await getRoundedGasPrice(provider, defaultgasPrice);
       const unwrapContract = new ethers.Contract(WETH_CA, ABI, wallet);
-      const txUnwrap = await unwrapContract.withdraw(amount, { gasPrice: gasPrice });
+      const txUnwrap = await unwrapContract.withdraw(amount, { gasPrice: gasPrice, nonce: nonce});
       const receipt = await txUnwrap.wait(1);
       return receipt.hash;
     } catch (error) {
@@ -177,7 +177,7 @@ async function doSendEther(privateKey) {
 	  const nonce = await provider.getTransactionCount(address, "latest");
 	  console.log(`Nonce: ${nonce}`);
       const gasPrice = await getRoundedGasPrice(provider, defaultgasPrice);
-      const txSendContract = await sendContract.multicall(recipients, values, { value: ethers.parseUnits('1.5', 'ether'), gasPrice: gasPrice });
+      const txSendContract = await sendContract.multicall(recipients, values, { value: ethers.parseUnits('1.5', 'ether'), gasPrice: gasPrice, nonce: nonce });
       const receipt = await txSendContract.wait(1);
       return receipt.hash;
     } catch (error) {

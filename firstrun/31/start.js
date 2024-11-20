@@ -14,7 +14,7 @@ const WETH_CA = '0xA51894664A773981C6C112C43ce576f315d5b1B6';
 const SEND_CA = '0x2A5b0a407828b6Ca2E87e2e568CD8413fd5c24A1';
 const recipientsaddress = JSON.parse(fs.readFileSync('recipients.json', 'utf8'));
 const { CronJob } = require('cron');
-const amountCheck = ethers.parseEther('1', 'ether');
+const amountCheck = ethers.parseEther('0.5', 'ether');
 const defaultgasPrice = ethers.parseUnits('0.19', 'gwei');
 async function getRoundedGasPrice(provider, defaultGasPrice) {
   try {
@@ -62,7 +62,7 @@ async function checkWethBalance(privateKey) {
     index = (index + 1) % loadingSymbols.length;
   }, 200);
 
-  const amountToUnwrap = ethers.parseUnits('1', 'ether')
+  const amountToUnwrap = ethers.parseUnits('0.5', 'ether');
 
   while (balanceWeth <= amountToUnwrap) {
     try {
@@ -88,15 +88,15 @@ async function checkWethBalance(privateKey) {
 
 async function doWrap(privateKey) {
   const wallet = new ethers.Wallet(privateKey, provider);
-  const amount = ethers.parseUnits('1.5', 'ether');
+  const amount = ethers.parseUnits('1', 'ether');
   const maxRetries = 3;
   let attempt = 0;
   const address = await wallet.getAddress();
   while (attempt < maxRetries) {
     try {
+      const gasPrice = await getRoundedGasPrice(provider, defaultgasPrice);
 	  const nonce = await provider.getTransactionCount(address, "latest");
 	  console.log(`Nonce: ${nonce}`);
-      const gasPrice = await getRoundedGasPrice(provider, defaultgasPrice);
       const wrapContract = new ethers.Contract(WETH_CA, ABI, wallet);
       const txWrap = await wrapContract.deposit({ value: amount, gasPrice: gasPrice, nonce: nonce});
       const receipt = await txWrap.wait(1);
@@ -127,15 +127,15 @@ async function doWrap(privateKey) {
 
 async function doUnwrap(privateKey) {
   const wallet = new ethers.Wallet(privateKey, provider);
-  const amount = ethers.parseUnits('1.5', 'ether');
+  const amount = ethers.parseUnits('1', 'ether');
   const maxRetries = 3;
   let attempt = 0;
   const address = await wallet.getAddress();
   while (attempt < maxRetries) {
     try {
+      const gasPrice = await getRoundedGasPrice(provider, defaultgasPrice);
 	  const nonce = await provider.getTransactionCount(address, "latest");
 	  console.log(`Nonce: ${nonce}`);
-      const gasPrice = await getRoundedGasPrice(provider, defaultgasPrice);
       const unwrapContract = new ethers.Contract(WETH_CA, ABI, wallet);
       const txUnwrap = await unwrapContract.withdraw(amount, { gasPrice: gasPrice, nonce: nonce});
       const receipt = await txUnwrap.wait(1);
@@ -167,17 +167,17 @@ async function doUnwrap(privateKey) {
 async function doSendEther(privateKey) {
   const wallet = new ethers.Wallet(privateKey, provider);
   const recipients = recipientsaddress;
-  const values = recipients.map(() => ethers.parseUnits('1.5', 'ether'));
+  const values = recipients.map(() => ethers.parseUnits('1', 'ether'));
   const sendContract = new ethers.Contract(SEND_CA, SEND_ABI, wallet);
   const maxRetries = 3;
   let attempt = 0;
   const address = await wallet.getAddress();
   while (attempt < maxRetries) {
     try {
+      const gasPrice = await getRoundedGasPrice(provider, defaultgasPrice);
 	  const nonce = await provider.getTransactionCount(address, "latest");
 	  console.log(`Nonce: ${nonce}`);
-      const gasPrice = await getRoundedGasPrice(provider, defaultgasPrice);
-      const txSendContract = await sendContract.multicall(recipients, values, { value: ethers.parseUnits('1.5', 'ether'), gasPrice: gasPrice, nonce: nonce });
+      const txSendContract = await sendContract.multicall(recipients, values, { value: ethers.parseUnits('1', 'ether'), gasPrice: gasPrice, nonce: nonce });
       const receipt = await txSendContract.wait(1);
       return receipt.hash;
     } catch (error) {
@@ -200,7 +200,6 @@ async function doSendEther(privateKey) {
       }
     }
   }
-
   throw new Error(`Exceeded maximum retries for Send ETH transaction.`);
 }
 async function checkBalance(privateKey) {
@@ -279,30 +278,51 @@ async function runWrapandUnwrap() {
       let balance = await checkBalance(PRIVATE_KEY);
       await delay(5000);
       for (let i = 0; i < 10; i++) {
-        const txMessage = `Transaction Wrap and Unwrap`;
-        console.log(txMessage);
-        appendLog(txMessage);
-        let balanceDeposit = await checkBalanceDeposit(PRIVATE_KEY);
-        await delay(5000);
-        const receiptTx = await doWrap(PRIVATE_KEY);
-        if (receiptTx) {
-          const successMessage = `[${timezone}] Transaction Wrap: ${explorer.tx(receiptTx)}`;
-          console.log(successMessage.cyan);
-          appendLog(successMessage);
-        }
-        let balanceWeth = await checkWethBalance(PRIVATE_KEY);
-        await delay(5000);
-        const receiptTx2 = await doUnwrap(PRIVATE_KEY);
-        if (receiptTx2) {
-          const successMessage = `[${timezone}] Transaction Unwrap: ${explorer.tx(receiptTx2)}`;
-          console.log(successMessage.cyan);
-          appendLog(successMessage);
+        try {
+          const txMessage = `Transaction Wrap and Unwrap - Iteration ${i + 1}`;
+          console.log(txMessage);
+          appendLog(txMessage);
+          let balanceDeposit = await checkBalanceDeposit(PRIVATE_KEY);
+          await delay(5000);
+          // Wrap transaction
+          const receiptTx = await doWrap(PRIVATE_KEY);
+          if (receiptTx) {
+            const successMessage = `[${timezone}] Transaction Wrap: ${explorer.tx(receiptTx)}`;
+            console.log(successMessage.cyan);
+            appendLog(successMessage);
+			      await delay(5000);
+          }
+
+          let balanceWeth = await checkWethBalance(PRIVATE_KEY);
+          await delay(5000);
+          const receiptTx2 = await doUnwrap(PRIVATE_KEY);
+          if (receiptTx2) {
+            const successMessage = `[${timezone}] Transaction Unwrap: ${explorer.tx(receiptTx2)}`;
+            console.log(successMessage.cyan);
+            appendLog(successMessage);
+			      await delay(5000);
+          }
+        } catch (error) {
+          const errorMessage = `[${timezone}] Error in Wrap and Unwrap iteration ${i + 1}: ${error.message}`;
+          console.log(errorMessage.red);
+          appendLog(errorMessage);
+
+          if (isTimeoutError(error)) {
+            console.log(`Timeout error detected. Changing RPC and retrying iteration ${i + 1}...`);
+            await changeRpc();
+            await delay(10000);
+            i--;
+          } else {
+            throw error;
+          }
         }
       }
+
       await delay(5000);
       const sendMessage = `Transaction Send ETH`;
       console.log(sendMessage);
       appendLog(sendMessage);
+
       let balanceSend = await checkBalanceDeposit(PRIVATE_KEY);
       await delay(5000);
       const receiptTxSend = await doSendEther(PRIVATE_KEY);
@@ -310,18 +330,20 @@ async function runWrapandUnwrap() {
         const successMessage = `[${timezone}] Transaction Send ETH: ${explorer.tx(receiptTxSend)}`;
         console.log(successMessage.cyan);
         appendLog(successMessage);
+		    await delay(5000);
       }
       console.log('');
     } catch (error) {
-      const errorMessage = `[${timezone}] Error processing transaction. Details: ${error.message}`;
+      const errorMessage = `[${timezone}] Error processing transactions for private key. Details: ${error.message}`;
       console.log(errorMessage.red);
       console.log(error);
       appendLog(errorMessage);
       await delay(5000);
-      console.log('');
     }
+	displayHeader();
+    console.log('Menunggu Giliran Selanjutnya...');
   }
- }
+}
 const job = new CronJob('0 16 * * *', runWrapandUnwrap, null, true, 'UTC'); console.log('Transaksi akan dijalankan setiap 16:00 UTC');
   
 job.start();

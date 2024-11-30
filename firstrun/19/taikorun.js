@@ -279,7 +279,7 @@ async function runWrapandUnwrap() {
       await delay(5000);
       for (let i = 0; i < 10; i++) {
         try {
-		  const Timestamp() = moment().tz('Asia/Jakarta').format('HH:mm:ss [WIB] DD-MM-YYYY');
+		  
           const txMessage = `Transaction Wrap and Unwrap(${i + 1}/10)`;
           console.log(txMessage);
           appendLog(txMessage);

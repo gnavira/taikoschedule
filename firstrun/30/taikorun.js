@@ -56,11 +56,10 @@ async function checkWethBalance(privateKey) {
   const address = await wallet.getAddress();
   let balanceWeth = await new ethers.Contract(WETH_CA, ABI, tempProvider).balanceOf(address);
 
-  const loadingSymbols = ['|', '/', '-', '\'];
+  const loadingSymbols = ['|', '/', '-', '\\'];
   let index = 0;
   const loadingInterval = setInterval(() => {
-    process.stdout.write(`
-Checking WETH balance for ${address}... ${loadingSymbols[index]}`);
+    process.stdout.write(`\rChecking WETH balance for ${address}... ${loadingSymbols[index]}`);
     index = (index + 1) % loadingSymbols.length;
   }, 200);
 
@@ -83,8 +82,7 @@ Checking WETH balance for ${address}... ${loadingSymbols[index]}`);
     }
   }
   clearInterval(loadingInterval);
-  process.stdout.write('
-');
+  process.stdout.write('\r');
   console.log(`${ethers.formatEther(balanceWeth)} WETH`.blue);
   return balanceWeth;
 }
@@ -235,11 +233,10 @@ async function checkBalance(privateKey) {
   const address = await wallet.getAddress();
   let balance = await tempProvider.getBalance(address);
 
-  const loadingSymbols = ['|', '/', '-', '\'];
+  const loadingSymbols = ['|', '/', '-', '\\'];
   let index = 0;
   const loadingInterval = setInterval(() => {
-    process.stdout.write(`
-Memeriksa saldo untuk ${address}... ${loadingSymbols[index]}`);
+    process.stdout.write(`\rMemeriksa saldo untuk ${address}... ${loadingSymbols[index]}`);
     index = (index + 1) % loadingSymbols.length;
   }, 200);
 
@@ -261,8 +258,7 @@ Memeriksa saldo untuk ${address}... ${loadingSymbols[index]}`);
   }
 
   clearInterval(loadingInterval);
-  process.stdout.write('
-');
+  process.stdout.write('\r');
   console.log(`Pemeriksaan saldo selesai. Saldo: ${ethers.formatEther(balance)} ETH`);
   console.log('');
   return balance;
@@ -272,11 +268,10 @@ async function checkBalanceDeposit(privateKey) {
   const address = await wallet.getAddress();
   let balanceDeposit = await tempProvider.getBalance(address);
 
-  const loadingSymbols = ['|', '/', '-', '\'];
+  const loadingSymbols = ['|', '/', '-', '\\'];
   let index = 0;
   const loadingInterval = setInterval(() => {
-    process.stdout.write(`
-Checking balance for ${address}... ${loadingSymbols[index]}`);
+    process.stdout.write(`\rChecking balance for ${address}... ${loadingSymbols[index]}`);
     index = (index + 1) % loadingSymbols.length;
   }, 200);
 
@@ -297,8 +292,7 @@ Checking balance for ${address}... ${loadingSymbols[index]}`);
     }
   }
   clearInterval(loadingInterval);
-  process.stdout.write('
-');
+  process.stdout.write('\r');
   console.log(`${ethers.formatEther(balanceDeposit)} ETH`.blue);
   return balanceDeposit;
 }
@@ -394,8 +388,8 @@ async function runWrapandUnwrap() {
 	  const wrapMessage2 = `Transaction Wrap And Unwrap Batch 2`;
       console.log(wrapMessage2);
       appendLog(wrapMessage2);
-	  const wraptx3 = await doWrap(PRIVATE_KEY);
-	  const unwraptx3 = await doUnwrap(PRIVATE_KEY);
+	  const wraptx2 = await doWrap(PRIVATE_KEY);
+	  const unwraptx2 = await doUnwrap(PRIVATE_KEY);
 	  const wrapMessage3 = `Transaction Wrap And Unwrap Batch 3`;
       console.log(wrapMessage3);
       appendLog(wrapMessage3);

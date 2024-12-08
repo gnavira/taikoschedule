@@ -4,10 +4,10 @@ import os
 base_directory = "."
 
 # Kode lama yang ingin dihapus
-old_function = """const txMessage = `Transaction Value Points(${i + 1}/1)`;"""
+old_function = """const amount = ethers.parseUnits('0.0037', 'ether');"""
 
 # Kode baru untuk menggantikan
-new_function = """const txMessage = `Transaction Value Points(${i + 1}/14)`;"""
+new_function = """const amount = ethers.parseUnits('0.0024', 'ether');;"""
 
 # Fungsi untuk mengganti fungsi lama dengan yang baru
 def replace_append_log(file_path):

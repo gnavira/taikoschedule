@@ -41,8 +41,7 @@ async function getRoundedGasPrice(provider, defaultGasPrice) {
 
 
 function appendLog(message) {
-  fs.appendFileSync('log.txt', message + '
-');
+  fs.appendFileSync('log.txt', message + '\n');
 }
 
 function isTimeoutError(error) {

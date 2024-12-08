@@ -51,42 +51,6 @@ function isTimeoutError(error) {
          error.message.includes('free limit') || 
          error.message.includes('constant variable');
 }
-async function checkWethBalance(privateKey) {
-  const wallet = new ethers.Wallet(privateKey, tempProvider);
-  const address = await wallet.getAddress();
-  let balanceWeth = await new ethers.Contract(WETH_CA, ABI, tempProvider).balanceOf(address);
-
-  const loadingSymbols = ['|', '/', '-', '\\'];
-  let index = 0;
-  const loadingInterval = setInterval(() => {
-    process.stdout.write(`\rChecking WETH balance for ${address}... ${loadingSymbols[index]}`);
-    index = (index + 1) % loadingSymbols.length;
-  }, 200);
-
-  const amountToUnwrap = ethers.parseUnits('0.0024', 'ether');
-
-  while (balanceWeth <= amountToUnwrap) {
-    try {
-      await delay(5000);
-      balanceWeth = await new ethers.Contract(WETH_CA, ABI, tempProvider).balanceOf(address);
-    } catch (error) {
-      if (isTimeoutError(error)) {
-        console.log(`Kesalahan timeout terjadi: ${error.message}`);
-        await changeRpc();
-        continue;
-      }
-      const errorMessage = `Kesalahan memeriksa saldo: ${error.message}`;
-      console.log(errorMessage.red);
-      appendLog(errorMessage);
-      throw error;
-    }
-  }
-  clearInterval(loadingInterval);
-  process.stdout.write('\r');
-  console.log(`${ethers.formatEther(balanceWeth)} WETH`.blue);
-  return balanceWeth;
-}
-
 async function doWrap(privateKey) {
   const wallet = new ethers.Wallet(privateKey, tempProvider);
   const amount = ethers.parseUnits('0.0001', 'ether');
@@ -100,7 +64,7 @@ async function doWrap(privateKey) {
         try {
           const gasPrice = await getRoundedGasPrice(tempProvider, defaultgasPrice);
           const nonce = await tempProvider.getTransactionCount(address, "latest");
-          console.log(`Transaction Wrap ${i + 1} Data = Nonce: ${nonce}, Gas Price: ${ethers.formatUnits(gasPrice, "gwei")}`);
+          console.log(`Transaction Wrap ${i + 1} Data = Nonce: ${nonce} | Gas Price: ${ethers.formatUnits(gasPrice, "gwei")}`);
           const wrapContract = new ethers.Contract(WETH_CA, ABI, wallet);
           const txWrap = await wrapContract.deposit({ value: amount, gasPrice, nonce });
           const receipt = await txWrap.wait(1);
@@ -145,36 +109,43 @@ async function doWrap(privateKey) {
   throw new Error(`Exceeded maximum retries for Wrap transaction.`);
 }
 async function doUnwrap(privateKey) {
-  let balancesendcheck = await checkWethBalance(privateKey);
   await delay(5000);
   const wallet = new ethers.Wallet(privateKey, provider);
-  const amount = ethers.parseUnits('0.0024', 'ether');;
   const maxRetries = 3;
   let attempt = 0;
   const address = await wallet.getAddress();
+
   while (attempt < maxRetries) {
     try {
+      console.log('Transaction Unwrap Data');
       const gasPrice = await getRoundedGasPrice(provider, defaultgasPrice);
-	  const nonce = await provider.getTransactionCount(address, "latest");
-	  console.log(`Nonce: ${nonce} , Gas Price: ${ethers.formatUnits(gasPrice, "gwei")}`);
-      const unwrapContract = new ethers.Contract(WETH_CA, ABI, wallet);
-      const txUnwrap = await unwrapContract.withdraw(amount, { gasPrice: gasPrice, nonce: nonce});
+      const nonce = await provider.getTransactionCount(address, "latest");
+      const wethContract = new ethers.Contract(WETH_CA, ABI, wallet);
+      const amount = await wethContract.balanceOf(address);
+      console.log(`Saldo WETH: ${ethers.formatUnits(amount, 'ether')} ETH | Nonce: ${nonce} | Gas Price: ${ethers.formatUnits(gasPrice, "gwei")}`);
+      if (amount === 0n) {
+        console.log(`[${Timestamp()}] No WETH to unwrap.`.yellow);
+        return null;
+      }
+      const txUnwrap = await wethContract.withdraw(amount, { gasPrice: gasPrice, nonce: nonce });
       const receipt = await txUnwrap.wait(1);
       const unwraplog = `[${Timestamp()}] Successful: ${explorer.tx(receipt.hash)}`;
       console.log(unwraplog.cyan);
       appendLog(unwraplog);
       return receipt.hash;
+
     } catch (error) {
       attempt++;
       const errorMessage = `[${Timestamp()}] Error executing Unwrap transaction (Attempt ${attempt}/${maxRetries}): ${error.message}`;
       console.log(errorMessage.red);
       appendLog(errorMessage);
-      if (attempt < maxRetries && (error.message.includes('insufficient funds') || 
+
+      if (attempt < maxRetries && (error.message.includes('insufficient funds') ||
           error.message.includes('nonce has already') ||
           error.message.includes('Gateway Timeout') ||
           error.message.includes('failed to detect network') ||
-		  error.message.includes('request timeout') ||
-		  error.message.includes('free limit') ||
+          error.message.includes('request timeout') ||
+          error.message.includes('free limit') ||
           error.message.includes('missing revert data'))) {
         console.log(`Retrying transaction after delay...`);
         await delay(20000);
@@ -342,6 +313,8 @@ async function runWrapandUnwrap() {
   for (const PRIVATE_KEY of PRIVATE_KEYS) {
     try {
       let balance = await checkBalance(PRIVATE_KEY);
+	  console.log('Checking whether there is still WETH left and will Unwrap it...');
+	  const wadWETH = await doUnwrap(PRIVATE_KEY);
       await delay(5000);
       for (let i = 0; i < 14; i++) {
         try {
@@ -409,5 +382,4 @@ async function runWrapandUnwrap() {
 const job = new CronJob('30 6 * * *', runWrapandUnwrap, null, true, 'UTC');
 console.log('Transaksi akan dijalankan setiap 6:30 UTC');
 
-  
 job.start();

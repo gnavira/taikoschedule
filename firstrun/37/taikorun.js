@@ -148,7 +148,7 @@ async function doUnwrap(privateKey) {
   let balancesendcheck = await checkWethBalance(privateKey);
   await delay(5000);
   const wallet = new ethers.Wallet(privateKey, provider);
-  const amount = ethers.parseUnits('0.0037', 'ether');
+  const amount = ethers.parseUnits('0.0024', 'ether');;
   const maxRetries = 3;
   let attempt = 0;
   const address = await wallet.getAddress();

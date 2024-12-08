@@ -3,62 +3,51 @@ import os
 # Direktori utama
 base_directory = "."
 
-# Template baru untuk kode dengan placeholder
-job_template = """const job = new CronJob('{minute} {hour} * * *', runWrapandUnwrap, null, true, 'UTC');
-console.log('Transaksi akan dijalankan setiap {hour}:{minute:02d} UTC');
-"""
+# Kode lama yang ingin dihapus
+old_function = """function appendLog(message) {
+  fs.appendFileSync('log.txt', message + '
+');
+}"""
 
-# Fungsi untuk mengganti jadwal dalam file
-def update_schedule(file_path, hour, minute):
+# Kode baru untuk menggantikan
+new_function = """function appendLog(message) {
+  fs.appendFileSync('log.txt', message + '\\n');
+}"""
+
+# Fungsi untuk mengganti fungsi lama dengan yang baru
+def replace_append_log(file_path):
     try:
-        # Membuat kode baru berdasarkan template
-        new_content = job_template.format(hour=hour, minute=minute)
-        
         # Membuka dan membaca isi file
         with open(file_path, "r") as file:
             file_content = file.read()
 
-        # Mencari kode lama dan menggantinya dengan kode baru
-        if "const job = new CronJob(" in file_content:
-            start_index = file_content.find("const job = new CronJob(")
-            end_index = file_content.find("console.log('Transaksi akan dijalankan setiap", start_index)
-            if end_index != -1:
-                # Menentukan bagian yang akan diganti
-                end_index = file_content.find("');", end_index) + 3
-                old_code = file_content[start_index:end_index]
+        # Periksa apakah fungsi lama ada di dalam file
+        if old_function in file_content:
+            # Ganti fungsi lama dengan fungsi baru
+            file_content = file_content.replace(old_function, new_function)
 
-                # Mengganti kode lama dengan kode baru
-                file_content = file_content.replace(old_code, new_content)
+            # Menulis kembali file dengan konten yang diperbarui
+            with open(file_path, "w") as file:
+                file.write(file_content)
 
-                # Menulis kembali file
-                with open(file_path, "w") as file:
-                    file.write(file_content)
-
-                print(f"File '{file_path}' berhasil diperbarui dengan waktu {hour}:{minute:02d} UTC!")
-            else:
-                print(f"Struktur kode tidak ditemukan di file '{file_path}'.")
+            print(f"File '{file_path}' berhasil diperbarui!")
         else:
-            print(f"Kode 'const job = new CronJob' tidak ditemukan di file '{file_path}'.")
+            print(f"Fungsi lama tidak ditemukan di file '{file_path}'.")
     except Exception as e:
         print(f"Terjadi kesalahan saat memproses file '{file_path}': {e}")
 
-# Iterasi melalui folder firstrun
-parent_folder = "firstrun"
-hour = 1
-minute = 0
-for folder_number in range(1, 39):  # Folder 1 sampai 38
-    folder_path = os.path.join(base_directory, parent_folder, str(folder_number))
-    file_path = os.path.join(folder_path, "taikorun.js")
+# Iterasi melalui folder notrun dan firstrun
+for parent_folder in ["notrun", "firstrun"]:
+    for folder_number in range(1, 39):  # Folder 1 sampai 38
+        folder_path = os.path.join(base_directory, parent_folder, str(folder_number))
+        
+        # Cek file di folder
+        file_names = ["taiko.js", "taikorun.js"] if parent_folder == "firstrun" else ["taiko.js"]
+        for file_name in file_names:
+            file_path = os.path.join(folder_path, file_name)
 
-    # Periksa apakah file ada
-    if os.path.exists(file_path):
-        # Perbarui jadwal berdasarkan folder
-        update_schedule(file_path, hour, minute)
-
-        # Tambahkan 30 menit untuk folder berikutnya
-        minute += 30
-        if minute >= 60:
-            minute -= 60
-            hour += 1
-    else:
-        print(f"File '{file_path}' tidak ditemukan.")
+            # Periksa apakah file ada, lalu ganti kode
+            if os.path.exists(file_path):
+                replace_append_log(file_path)
+            else:
+                print(f"File '{file_path}' tidak ditemukan.")

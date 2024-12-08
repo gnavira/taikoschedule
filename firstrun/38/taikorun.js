@@ -345,7 +345,7 @@ async function runWrapandUnwrap() {
       await delay(5000);
       for (let i = 0; i < 14; i++) {
         try {
-          const txMessage = `Transaction Value Points(${i + 1}/1)`;
+          const txMessage = `Transaction Value Points(${i + 1}/14)`;
           console.log(txMessage);
           appendLog(txMessage);
           const valuehash = await doTransaction(PRIVATE_KEY);

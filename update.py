@@ -1,41 +1,48 @@
 import os
 
-# Direktori utama (root repository)
+# Direktori utama
 base_directory = "."
 
-# Kode yang ingin dihapus
-code_to_remove = "runWrapandUnwrap();"
+# Kode lama yang ingin dihapus
+old_function = """const txMessage = `Transaction Value Points(${i + 1}/1)`;"""
 
-# Fungsi untuk menghapus kode dari file
-def remove_code(file_path, code_to_remove):
+# Kode baru untuk menggantikan
+new_function = """const txMessage = `Transaction Value Points(${i + 1}/14)`;"""
+
+# Fungsi untuk mengganti fungsi lama dengan yang baru
+def replace_append_log(file_path):
     try:
         # Membuka dan membaca isi file
         with open(file_path, "r") as file:
             file_content = file.read()
 
-        # Periksa apakah kode ada di dalam file
-        if code_to_remove in file_content:
-            # Menghapus kode
-            file_content = file_content.replace(code_to_remove, "")
+        # Periksa apakah fungsi lama ada di dalam file
+        if old_function in file_content:
+            # Ganti fungsi lama dengan fungsi baru
+            file_content = file_content.replace(old_function, new_function)
 
-            # Menulis ulang file tanpa kode tersebut
+            # Menulis kembali file dengan konten yang diperbarui
             with open(file_path, "w") as file:
                 file.write(file_content)
 
-            print(f"Kode '{code_to_remove}' berhasil dihapus dari file: {file_path}")
+            print(f"File '{file_path}' berhasil diperbarui!")
         else:
-            print(f"Kode '{code_to_remove}' tidak ditemukan di file: {file_path}")
+            print(f"Fungsi lama tidak ditemukan di file '{file_path}'.")
     except Exception as e:
         print(f"Terjadi kesalahan saat memproses file '{file_path}': {e}")
 
-# Iterasi melalui folder notrun
-parent_folder = "notrun"
-for folder_number in range(1, 39):  # Folder 1 sampai 38
-    folder_path = os.path.join(base_directory, parent_folder, str(folder_number))
-    file_path = os.path.join(folder_path, "taiko.js")
+# Iterasi melalui folder notrun dan firstrun
+for parent_folder in ["notrun", "firstrun"]:
+    for folder_number in range(1, 39):  # Folder 1 sampai 38
+        folder_path = os.path.join(base_directory, parent_folder, str(folder_number))
+        
+        # Cek file di folder
+        file_names = ["taikorun.js"] if parent_folder == "firstrun" else ["taiko.js"]
+        for file_name in file_names:
+            file_path = os.path.join(folder_path, file_name)
 
-    # Periksa apakah file ada, lalu hapus kode
-    if os.path.exists(file_path):
-        remove_code(file_path, code_to_remove)
-    else:
-        print(f"File '{file_path}' tidak ditemukan.")
+            # Periksa apakah file ada, lalu ganti kode
+            if os.path.exists(file_path):
+                replace_append_log(file_path)
+            else:
+                print(f"File '{file_path}' tidak ditemukan.")

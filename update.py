@@ -1,41 +1,39 @@
 import os
 
-# Direktori utama (root repository)
+# Direktori utama
 base_directory = "."
 
-# Kode yang ingin dihapus
-code_to_remove = "runWrapandUnwrap();"
-
-# Fungsi untuk menghapus kode dari file
-def remove_code(file_path, code_to_remove):
+# Fungsi untuk menulis isi file dengan cron berbeda
+def write_cron_to_file(file_path, hour, minute):
     try:
-        # Membuka dan membaca isi file
-        with open(file_path, "r") as file:
-            file_content = file.read()
-
-        # Periksa apakah kode ada di dalam file
-        if code_to_remove in file_content:
-            # Menghapus kode
-            file_content = file_content.replace(code_to_remove, "")
-
-            # Menulis ulang file tanpa kode tersebut
-            with open(file_path, "w") as file:
-                file.write(file_content)
-
-            print(f"Kode '{code_to_remove}' berhasil dihapus dari file: {file_path}")
-        else:
-            print(f"Kode '{code_to_remove}' tidak ditemukan di file: {file_path}")
+        # Format cron berdasarkan jam dan menit
+        cron_code = f"""const job = new CronJob('{minute} {hour} * * *', runWrapandUnwrap, null, true, 'UTC');
+console.log('Transaksi akan dijalankan setiap {hour:02d}:{minute:02d} UTC');
+"""
+        with open(file_path, "w") as file:
+            file.write(cron_code)
+        print(f"Cron berhasil ditulis ke file: {file_path}")
     except Exception as e:
-        print(f"Terjadi kesalahan saat memproses file '{file_path}': {e}")
+        print(f"Terjadi kesalahan saat menulis cron ke file '{file_path}': {e}")
 
-# Iterasi melalui folder notrun
-parent_folder = "notrun"
-for folder_number in range(1, 39):  # Folder 1 sampai 38
-    folder_path = os.path.join(base_directory, parent_folder, str(folder_number))
-    file_path = os.path.join(folder_path, "taiko.js")
+# Iterasi melalui folder notrun dan firstrun
+for parent_folder in ["notrun", "firstrun"]:
+    hour, minute = 1, 0  # Mulai dari jam 01:00
+    for folder_number in range(1, 39):  # Folder 1 sampai 38
+        folder_path = os.path.join(base_directory, parent_folder, str(folder_number))
+        
+        # Tentukan file yang akan diubah
+        file_name = "taiko.js" if parent_folder == "notrun" else "taikorun.js"
+        file_path = os.path.join(folder_path, file_name)
 
-    # Periksa apakah file ada, lalu hapus kode
-    if os.path.exists(file_path):
-        remove_code(file_path, code_to_remove)
-    else:
-        print(f"File '{file_path}' tidak ditemukan.")
+        # Periksa apakah file ada
+        if os.path.exists(file_path):
+            write_cron_to_file(file_path, hour, minute)
+
+            # Tambahkan 15 menit untuk file berikutnya
+            minute += 15
+            if minute >= 60:  # Jika menit melebihi 60, tambahkan 1 jam
+                minute -= 60
+                hour += 1
+        else:
+            print(f"File '{file_path}' tidak ditemukan.")

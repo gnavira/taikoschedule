@@ -4,7 +4,7 @@ import os
 base_directory = "."
 
 # Kode yang ingin dihapus
-code_to_remove = "runWrapandUnwrap();"
+code_to_remove = "console.log('Checking whether there is still WETH left and will Unwrap it...');"
 
 # Fungsi untuk menghapus kode dari file
 def remove_code(file_path, code_to_remove):

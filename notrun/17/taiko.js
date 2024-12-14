@@ -206,8 +206,8 @@ async function runWrapandUnwrap() {
   for (const PRIVATE_KEY of PRIVATE_KEYS) {
     try {
       let balance = await checkBalance(PRIVATE_KEY);
-	  console.log('Checking whether there is still WETH left and will Unwrap it...');
-	  const wadWETH = await doUnwrap(PRIVATE_KEY);
+	  
+	  
       await delay(5000);
       for (let i = 0; i < 14; i++) {
         try {

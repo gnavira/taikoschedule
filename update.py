@@ -30,7 +30,7 @@ def remove_code(file_path, code_to_remove):
 
 # Iterasi melalui folder notrun
 parent_folder = "notrun"
-for folder_number in range(1, 39):  # Folder 1 sampai 38
+for folder_number in range(1, 77):  # Folder 1 sampai 38
     folder_path = os.path.join(base_directory, parent_folder, str(folder_number))
     file_path = os.path.join(folder_path, "taiko.js")
 
